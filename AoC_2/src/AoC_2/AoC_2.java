@@ -1,4 +1,4 @@
-package AoC_1;
+package AoC_2;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AoC_1 {
+public class AoC_2 {
 	static List<Integer> _moduleMass = new ArrayList<Integer>();
 
 	public static void main(String[] args) throws IOException {
