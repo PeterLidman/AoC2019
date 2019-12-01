@@ -20,34 +20,50 @@ public class AoC_1 {
 			frekvensJusteringar.add(Integer.parseInt(str));
 		}
 		br.close();
+
+		System.out.println("f" + calc(12));
+		System.out.println("f" + calc(14));
+		System.out.println("f" + calc(1969));
+		System.out.println("f" + calc(100756));
+
 		del1();
-		del2();
+
+		System.out.println("f" + reccalc(14));
+		System.out.println("f" + reccalc(1969));
+		System.out.println("f" + reccalc(100756));
+
+		del3();
+	}
+
+	private static int reccalc(int a) {
+		int b = a, sum = 0;
+
+		while (0 < (b = calc(b))) {
+			sum += b;
+		}
+		return sum;
+	}
+
+	private static int calc(int a) {
+		return a / 3 - 2;
 	}
 
 	public static void del1() {
 		int sum = 0;
 
 		for (Integer frekvens : frekvensJusteringar) {
-			sum += frekvens;
+			sum += calc(frekvens);
 		}
 		System.out.println("Frekvens: " + sum);
 	}
 
-	public static void del2() {
+	public static void del3() {
 		int sum = 0;
-		Set<Integer> frekvenser = new HashSet<>();
-		boolean found = false;
-		frekvenser.add(0);
 
-		do {
-			for (Integer frekvens : frekvensJusteringar) {
-				sum += frekvens;
-				if (found = !frekvenser.add(sum)) {
-					break;
-				}
-			}
-		} while (!found);
-		System.out.println("Första dubbletten: " + sum);
+		for (Integer frekvens : frekvensJusteringar) {
+			sum += reccalc(frekvens);
+		}
+		System.out.println("Frekvens: " + sum);
 	}
 
 }
