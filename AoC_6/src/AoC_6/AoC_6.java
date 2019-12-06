@@ -13,20 +13,30 @@ public class AoC_6 {
 	static List<String> _c = new ArrayList<String>();
 	static List<String> _o = new ArrayList<String>();
 	static HashMap<String, Integer> _orbs = new HashMap<>();
+	static HashMap<String, Integer> _memoization = new HashMap<>();
 
 	public static void main(String[] args) throws IOException, FileNotFoundException {
 		String cs;
-		int count = 0;
+		int count = 0, cnt = 0;
+		Integer memo;
 
 		readInput();
 
 		for (int i = 0; i < _o.size(); i++) {
+			cnt = 0;
 			cs = getCenter(_o.get(i));
 			while (!cs.equals("COM")) {
-				count++;
-				cs = getCenter(cs);
+				memo = _memoization.get(cs);
+				if ( memo == null) {
+					cnt++;
+					cs = getCenter(cs);
+				} else {
+					cnt = cnt + memo;
+					cs = "COM";
+				}
 			}
-			count++;
+			_memoization.put(getCenter(_o.get(i)), cnt);
+			count = count + ++cnt;
 		}
 		System.out.println("Orbits " + count);
 
