@@ -10,147 +10,150 @@ import java.util.List;
 
 public class AoC_7 {
 	static List<Integer> _intCode = new ArrayList<Integer>();
-	private static int _result = 0;
 	static List<String> _phases = new ArrayList<String>();
-	static String _phase = new String("43210");
 
-	public static void main(String[] args) {
-		AoC_7 a = new AoC_7();
+	public static void main(final String[] args) {
+		final AoC_7 a = new AoC_7();
 		a.run();
 	}
 
 	public void del1Test1() {
+		int result = 0;
 //		_intCode = new ArrayList<Integer>(Arrays.asList(3, 15, 3, 16, 1002, 16, 10, 16, 1, 16, 15, 15, 4, 15, 99, 0, 0));
-//		_phase = "43210";
+//		String phase = new String("43210");
 //		_intCode = new ArrayList<Integer>(Arrays.asList(3, 23, 3, 24, 1002, 24, 10, 24, 1002, 23, -1, 23, 101, 5, 23, 23, 1, 24, 23, 23, 4, 23,99, 0, 0));
-//		_phase = "01234";
+//		String phase = new String("01234");
 		_intCode = new ArrayList<Integer>(Arrays.asList(3, 31, 3, 32, 1002, 32, 10, 32, 1001, 31, -2, 31, 1007, 31, 0,
 				33, 1002, 33, 7, 33, 1, 33, 31, 31, 1, 32, 31, 31, 4, 31, 99, 0, 0, 0));
-		_phase = "10432";
+		final String phase = new String("10432");
+		final IntComputer ampA = new IntComputer(_intCode);
+		final IntComputer ampB = new IntComputer(_intCode);
+		final IntComputer ampC = new IntComputer(_intCode);
+		final IntComputer ampD = new IntComputer(_intCode);
+		final IntComputer ampE = new IntComputer(_intCode);
 
-		IntComputer ampA = new IntComputer(_intCode);
-		IntComputer ampB = new IntComputer(_intCode);
-		IntComputer ampC = new IntComputer(_intCode);
-		IntComputer ampD = new IntComputer(_intCode);
-		IntComputer ampE = new IntComputer(_intCode);
-		_result = 0;
-		ampA.addInput(Integer.valueOf(_phase.substring(0, 1)));
-		ampA.addInput(_result);
+		ampA.addInput(Integer.valueOf(phase.substring(0, 1)));
+		ampA.addInput(result);
 		ampA.run();
-		_result = ampA.getOutput();
-		ampB.addInput(Integer.valueOf(_phase.substring(1, 2)));
-		ampB.addInput(_result);
+		result = ampA.getOutput();
+		ampB.addInput(Integer.valueOf(phase.substring(1, 2)));
+		ampB.addInput(result);
 		ampB.run();
-		_result = ampB.getOutput();
-		ampC.addInput(Integer.valueOf(_phase.substring(2, 3)));
-		ampC.addInput(_result);
+		result = ampB.getOutput();
+		ampC.addInput(Integer.valueOf(phase.substring(2, 3)));
+		ampC.addInput(result);
 		ampC.run();
-		_result = ampC.getOutput();
-		ampD.addInput(Integer.valueOf(_phase.substring(3, 4)));
-		ampD.addInput(_result);
+		result = ampC.getOutput();
+		ampD.addInput(Integer.valueOf(phase.substring(3, 4)));
+		ampD.addInput(result);
 		ampD.run();
-		_result = ampD.getOutput();
-		ampE.addInput(Integer.valueOf(_phase.substring(4, 5)));
-		ampE.addInput(_result);
+		result = ampD.getOutput();
+		ampE.addInput(Integer.valueOf(phase.substring(4, 5)));
+		ampE.addInput(result);
 		ampE.run();
-		_result = ampE.getOutput();
-		_intCode.clear();
-		System.out.println("Test1 " + _result);
+		result = ampE.getOutput();
+		System.out.println("Test1 " + result);
 	}
 
 	public void del1() {
+		int result = 0;
+		String phase;
 		readInput();
+		_phases.clear();
 		permutphases("", "01234");
 		int _max = 0;
 
 		for (int j = 0; j < _phases.size(); j++) {
-			IntComputer ampA = new IntComputer(_intCode);
-			IntComputer ampB = new IntComputer(_intCode);
-			IntComputer ampC = new IntComputer(_intCode);
-			IntComputer ampD = new IntComputer(_intCode);
-			IntComputer ampE = new IntComputer(_intCode);
-			_result = 0;
-			_phase = _phases.get(j);
-			ampA.addInput(Integer.valueOf(_phase.substring(0, 1)));
-			ampA.addInput(_result);
+			final IntComputer ampA = new IntComputer(_intCode);
+			final IntComputer ampB = new IntComputer(_intCode);
+			final IntComputer ampC = new IntComputer(_intCode);
+			final IntComputer ampD = new IntComputer(_intCode);
+			final IntComputer ampE = new IntComputer(_intCode);
+			result = 0;
+			phase = _phases.get(j);
+			ampA.addInput(Integer.valueOf(phase.substring(0, 1)));
+			ampA.addInput(result);
 			ampA.run();
-			_result = ampA.getOutput();
-			ampB.addInput(Integer.valueOf(_phase.substring(1, 2)));
-			ampB.addInput(_result);
+			result = ampA.getOutput();
+			ampB.addInput(Integer.valueOf(phase.substring(1, 2)));
+			ampB.addInput(result);
 			ampB.run();
-			_result = ampB.getOutput();
-			ampC.addInput(Integer.valueOf(_phase.substring(2, 3)));
-			ampC.addInput(_result);
+			result = ampB.getOutput();
+			ampC.addInput(Integer.valueOf(phase.substring(2, 3)));
+			ampC.addInput(result);
 			ampC.run();
-			_result = ampC.getOutput();
-			ampD.addInput(Integer.valueOf(_phase.substring(3, 4)));
-			ampD.addInput(_result);
+			result = ampC.getOutput();
+			ampD.addInput(Integer.valueOf(phase.substring(3, 4)));
+			ampD.addInput(result);
 			ampD.run();
-			_result = ampD.getOutput();
-			ampE.addInput(Integer.valueOf(_phase.substring(4, 5)));
-			ampE.addInput(_result);
+			result = ampD.getOutput();
+			ampE.addInput(Integer.valueOf(phase.substring(4, 5)));
+			ampE.addInput(result);
 			ampE.run();
-			_result = ampE.getOutput();
-			_max = Math.max(_max, _result);
+			result = ampE.getOutput();
+			_max = Math.max(_max, result);
 		}
 		System.out.println("Del 1: " + _max);
 	}
 
 	public void del2() {
+		int result = 0;
+		String phase;
 		readInput();
+		_phases.clear();// underligt att det funkade utan denna radem?
 		permutphases("", "56789");
 		int _max = 0;
 
 		for (int j = 0; j < _phases.size(); j++) {
-			IntComputer ampA = new IntComputer(_intCode);
-			IntComputer ampB = new IntComputer(_intCode);
-			IntComputer ampC = new IntComputer(_intCode);
-			IntComputer ampD = new IntComputer(_intCode);
-			IntComputer ampE = new IntComputer(_intCode);
-			_result = 0;
-			_phase = _phases.get(j);
-			ampA.addInput(Integer.valueOf(_phase.substring(0, 1)));
-			ampA.addInput(_result);
+			final IntComputer ampA = new IntComputer(_intCode);
+			final IntComputer ampB = new IntComputer(_intCode);
+			final IntComputer ampC = new IntComputer(_intCode);
+			final IntComputer ampD = new IntComputer(_intCode);
+			final IntComputer ampE = new IntComputer(_intCode);
+			result = 0;
+			phase = _phases.get(j);
+			ampA.addInput(Integer.valueOf(phase.substring(0, 1)));
+			ampA.addInput(result);
 			ampA.run();
-			_result = ampA.getOutput();
-			ampB.addInput(Integer.valueOf(_phase.substring(1, 2)));
-			ampB.addInput(_result);
+			result = ampA.getOutput();
+			ampB.addInput(Integer.valueOf(phase.substring(1, 2)));
+			ampB.addInput(result);
 			ampB.run();
-			_result = ampB.getOutput();
-			ampC.addInput(Integer.valueOf(_phase.substring(2, 3)));
-			ampC.addInput(_result);
+			result = ampB.getOutput();
+			ampC.addInput(Integer.valueOf(phase.substring(2, 3)));
+			ampC.addInput(result);
 			ampC.run();
-			_result = ampC.getOutput();
-			ampD.addInput(Integer.valueOf(_phase.substring(3, 4)));
-			ampD.addInput(_result);
+			result = ampC.getOutput();
+			ampD.addInput(Integer.valueOf(phase.substring(3, 4)));
+			ampD.addInput(result);
 			ampD.run();
-			_result = ampD.getOutput();
-			ampE.addInput(Integer.valueOf(_phase.substring(4, 5)));
-			ampE.addInput(_result);
+			result = ampD.getOutput();
+			ampE.addInput(Integer.valueOf(phase.substring(4, 5)));
+			ampE.addInput(result);
 			ampE.run();
-			_result = ampE.getOutput();
+			result = ampE.getOutput();
 			while (true) {// feedback loop
-				ampA.addInput(_result);
+				ampA.addInput(result);
 				ampA.run();
-				Integer output = ampA.getOutput();
+				final Integer output = ampA.getOutput();
 				if (output == null) {
 					break;
 				}
-				_result = output;
-				ampB.addInput(_result);
+				result = output;
+				ampB.addInput(result);
 				ampB.run();
-				_result = ampB.getOutput();
-				ampC.addInput(_result);
+				result = ampB.getOutput();
+				ampC.addInput(result);
 				ampC.run();
-				_result = ampC.getOutput();
-				ampD.addInput(_result);
+				result = ampC.getOutput();
+				ampD.addInput(result);
 				ampD.run();
-				_result = ampD.getOutput();
-				ampE.addInput(_result);
+				result = ampD.getOutput();
+				ampE.addInput(result);
 				ampE.run();
-				_result = ampE.getOutput();
+				result = ampE.getOutput();
 			}
-			_max = Math.max(_max, _result);
+			_max = Math.max(_max, result);
 		}
 		System.out.println("Del 2: " + _max);
 	}
@@ -161,8 +164,8 @@ public class AoC_7 {
 		del2();
 	}
 
-	private static void permutphases(String prefix, String str) {
-		int n = str.length();
+	private static void permutphases(final String prefix, final String str) {
+		final int n = str.length();
 		if (n == 0) {
 			_phases.add(prefix);
 		} else {
@@ -178,15 +181,15 @@ public class AoC_7 {
 		FileInputStream in;
 		try {
 			in = new FileInputStream("C:\\git\\AoC2019\\AoC_7\\src\\AoC_7\\input.txt");
-			BufferedReader br = new BufferedReader(new InputStreamReader(in));
+			final BufferedReader br = new BufferedReader(new InputStreamReader(in));
 			while ((str = br.readLine()) != null) {
 				splitStr = str.split(",");
-				for (String s : splitStr) {
+				for (final String s : splitStr) {
 					_intCode.add(Integer.parseInt(s));
 				}
 			}
 			br.close();
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			System.out.println("Något sket sig vid inläsning");
 		}
 	}
@@ -198,17 +201,17 @@ public class AoC_7 {
 		String _out = new String("");
 		private int _noIn = 0;
 
-		public IntComputer(List<Integer> p) {
+		public IntComputer(final List<Integer> p) {
 			_ic = new ArrayList<Integer>(p);
 		}
 
 		public void run() {
 			while (true) {
 				int v1, v2, v3;
-				String opCode = "0000" + _ic.get(_pc);
-				String op = opCode.substring(opCode.length() - 2, opCode.length());
-				boolean m1 = opCode.substring(opCode.length() - 3, opCode.length() - 2).equals("1");
-				boolean m2 = opCode.substring(opCode.length() - 4, opCode.length() - 3).equals("1");
+				final String opCode = "0000" + _ic.get(_pc);
+				final String op = opCode.substring(opCode.length() - 2, opCode.length());
+				final boolean m1 = opCode.substring(opCode.length() - 3, opCode.length() - 2).equals("1");
+				final boolean m2 = opCode.substring(opCode.length() - 4, opCode.length() - 3).equals("1");
 				boolean m3 = opCode.substring(opCode.length() - 5, opCode.length() - 4).equals("1");
 
 				if (op.equals("99")) {
@@ -297,7 +300,7 @@ public class AoC_7 {
 			}
 		}
 
-		public void addInput(int a) {
+		public void addInput(final int a) {
 			_in.add(a);
 		}
 
