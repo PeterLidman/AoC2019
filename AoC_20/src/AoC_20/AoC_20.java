@@ -22,41 +22,40 @@ public class AoC_20 {
 	}
 
 	public void run() {
-		// del1();
+//		del1();
 		del2();
 	}
 
 	public void del2() {
 		Scanner scan = new Scanner(System.in);
-		readInput(20, 3);
-		// System.out.println(_warp);
-//		print(_space, false);
+		readInput(20, 0);
 		ArrayList<HashMap<Point, Integer>> listOfSpaces = new ArrayList<HashMap<Point, Integer>>();
-
-		HashMap<Point, Integer> innerspace = new HashMap<>();
-		for (Entry<Point, Integer> e : _space.entrySet()) { // deep copy
-			innerspace.put(new Point(e.getKey().x, e.getKey().y), new Integer(e.getValue()));
+		int numberOfSpaces = 160;
+		for (int i = 0; i < numberOfSpaces; i++) { // is 20 enough?
+			HashMap<Point, Integer> innerspace = new HashMap<>();
+			for (Entry<Point, Integer> e : _space.entrySet()) { // deep copy
+				innerspace.put(new Point(e.getKey().x, e.getKey().y), new Integer(e.getValue()));
+			}
+			listOfSpaces.add(innerspace);
 		}
-		listOfSpaces.add(innerspace);
-
 		int dist = 0;
-		int recurseLevel = 0;
-
 		Point start = null;
 		for (Entry<Point, String> entry : _warp.entrySet()) {
 			if (entry.getValue().equals("AA")) {
 				start = entry.getKey();
 			}
 		}
-
 		boolean run = true;
-		listOfSpaces.get(recurseLevel).put(start, 1);
+		listOfSpaces.get(0).put(start, 1);
 		while (run) {
 			dist++;
+//			print(listOfSpaces.get(0), false);
+//			print(listOfSpaces.get(1), false);
+//			String text = scan.nextLine();
+			System.out.println("check dist=" + dist);
 			Point punkt;
-			recurseLevel = listOfSpaces.size() - 1;
-			for (int rl = 0; rl <= recurseLevel; rl++) { // öka i alla recurce space samtidigt
-				for (Entry<Point, Integer> entry : listOfSpaces.get(recurseLevel).entrySet()) {
+			for (int rl = 0; rl < numberOfSpaces; rl++) { // öka i alla recurce space samtidigt
+				for (Entry<Point, Integer> entry : listOfSpaces.get(rl).entrySet()) { // kör detta spacet
 					if (entry.getValue().equals(dist)) { // hittat det som skall expandera i 4 riktningar
 						punkt = entry.getKey();
 						Point sidoPunkter[] = new Point[4];
@@ -66,47 +65,52 @@ public class AoC_20 {
 						sidoPunkter[3] = new Point(punkt.x, punkt.y - 1);
 						for (int i = 0; i < 4; i++) {
 							Point sido = sidoPunkter[i];
-							if (listOfSpaces.get(recurseLevel).get(sido) != null) {// är det ens i grottan?
+							if (listOfSpaces.get(rl).get(sido) != null) {// är det ens i grottan?
 								String maybe;
 								maybe = _warp.get(sido);
-								if (maybe != null && (rl > 0 || (rl == 0 && sido.x > 3 && sido.x < _maxx - 3
-										&& sido.y > 3 && sido.y > _maxy - 3))) { // warp här , leta upp andra warpen och
-																					// öka där också
-																					// only inner at recurselevel=0
-									if (maybe.equals("ZZ") && rl == 0) { // funkar bara på recurselevel=0
-										run = false;
-									} else if (maybe.equals("AA")) {
-										// do nothing
-									} else {
-//										System.out.println("warpa in " + sido);
-
-										if (recurseLevel + 1 >= listOfSpaces.size()) {
-											innerspace = new HashMap<>();
-//												String text = scan.nextLine();
-											for (Entry<Point, Integer> e : _space.entrySet()) { // deep copy
-												innerspace.put(new Point(e.getKey().x, e.getKey().y),
-														new Integer(e.getValue()));
-											}
-											listOfSpaces.add(innerspace);
-										}
-
-										for (Entry<Point, String> ent : _warp.entrySet()) {
-											if (ent.getValue().equals(maybe) && !ent.getKey().equals(sido)) {
-												if (sido.x > 3 && sido.x < _maxx - 3 && sido.y > 3
-														&& sido.y > _maxy - 3) { // warpa in
-													listOfSpaces.get(recurseLevel + 1).put(ent.getKey(), dist + 2);
-//													System.out.println("Warp in " + (recurseLevel +1));
-												} else { // warpa ut
-													listOfSpaces.get(recurseLevel - 1).put(ent.getKey(), dist + 2);
-//													System.out.println("Warp ut " + (recurseLevel -1));
+								if (maybe != null) { // warppunkt här
+									if (rl == 0) { // här funkar bara AA ZZ och inre
+										if (maybe.equals("ZZ")) { // vi hittade ut!!
+											System.out.println("we found exit");
+											run = false;
+										} else if (maybe.equals("AA")) {
+											// do nothing
+										} else { // only accept inner warps
+											for (Entry<Point, String> ent : _warp.entrySet()) {
+												if (ent.getValue().equals(maybe) && !ent.getKey().equals(sido)) {
+													if (sido.x > 3 && sido.x < _maxx - 3 && sido.y > 3
+															&& sido.y < _maxy - 3) { // inre
+														listOfSpaces.get(rl + 1).put(ent.getKey(), dist + 2);
+														System.out.println("recurse level " + (rl + 1));
+													} else { // yttre
+//														listOfSpaces.get(recurseLevel - 1).put(ent.getKey(), dist + 2); // outer closed
+													}
 												}
-//												System.out.println("warpa ut" + ent.getKey());
-//												String text = scan.nextLine();
+											}
+										}
+									} else { // här funkar inte AA ZZ
+										if (maybe.equals("ZZ")) { // vi hittade FAKE ut!!
+											System.out.println("we found fake exit");
+										} else if (maybe.equals("AA")) {
+											// do nothing
+										} else { // både yttre och inre funkar
+											for (Entry<Point, String> ent : _warp.entrySet()) {
+												if (ent.getValue().equals(maybe) && !ent.getKey().equals(sido)) {
+													if (sido.x > 3 && sido.x < _maxx - 3 && sido.y > 3
+															&& sido.y < _maxy - 3) { // inre
+														listOfSpaces.get(rl + 1).put(ent.getKey(), dist + 2);
+														System.out.println("recurse level " + (rl + 1));
+													} else { // yttre
+														listOfSpaces.get(rl - 1).put(ent.getKey(), dist + 2);
+														System.out.println("recurse level " + (rl - 1));
+													}
+												}
 											}
 										}
 									}
-								} else if (listOfSpaces.get(recurseLevel).get(sido) < dist) {
-									listOfSpaces.get(recurseLevel).put(sido, dist + 1);
+								}
+								if (listOfSpaces.get(rl).get(sido) == 0) { // öka bara om rutan innehåller 0
+									listOfSpaces.get(rl).put(sido, dist + 1); // öka vannlig ruta och warp ut
 								}
 							}
 						}
@@ -120,10 +124,7 @@ public class AoC_20 {
 	public void del1() {
 		Scanner scan = new Scanner(System.in);
 		readInput(20, 0);
-		// System.out.println(_warp);
-		print(_space, false);
 		int dist = 0;
-
 		Point start = null;
 		for (Entry<Point, String> entry : _warp.entrySet()) {
 			if (entry.getValue().equals("AA")) {
@@ -159,7 +160,7 @@ public class AoC_20 {
 										if (ent.getValue().equals(maybe) && !ent.getKey().equals(sido)) {
 											_space.put(ent.getKey(), dist + 2); // warp tar 1 steg att göra
 											System.out.println("warpa ut" + ent.getKey());
-//												String text = scan.nextLine();
+//											String text = scan.nextLine();
 										}
 									}
 								}
@@ -178,7 +179,6 @@ public class AoC_20 {
 		String s = "";
 		Integer c = 0;
 		String w = "";
-//		Scanner scan = new Scanner(System.in);
 		int maxx = 0, maxy = 0;
 		for (Point key : cave.keySet()) {
 			maxx = Math.max(maxx, key.x);
@@ -193,7 +193,8 @@ public class AoC_20 {
 						if (c == null) {
 							s += "#";
 						} else {
-							s += ".";
+							s += "" + (Integer.valueOf(c) % 10);
+							// s += ".";
 						}
 					} else {
 						s += w.substring(0, 1);
@@ -203,19 +204,13 @@ public class AoC_20 {
 					if (c == null) {
 						s += "#";
 					} else {
-						s += ".";
+						s += "" + (Integer.valueOf(c) % 10);
+//						s += ".";
 					}
 				}
 			}
 			System.out.println(s);
 			s = "";
-		}
-//		String text = scan.nextLine();
-	}
-
-	private void clearSpace() {
-		for (Point key : _space.keySet()) {
-			_space.put(key, 0);
 		}
 	}
 
