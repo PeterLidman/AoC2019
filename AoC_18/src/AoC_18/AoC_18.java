@@ -6,12 +6,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Scanner;
+import java.util.Set;
 
 public class AoC_18 {
 	static HashMap<Point, Integer> _space = new HashMap<>();
 	static HashMap<Point, String> _keysAndDoors = new HashMap<>();
+	static HashMap<String, String> _neighbors = new HashMap<>();
+	static HashMap<String, Integer> _keyDistances = new HashMap<>();
+	static Integer _bestDistance = Integer.MAX_VALUE;
+	static Integer _numberOfKeys = 0;
 
 	public static void main(final String[] args) {
 		final AoC_18 a = new AoC_18();
@@ -19,7 +25,223 @@ public class AoC_18 {
 	}
 
 	public void run() {
-		del1();
+		// del1();
+		del1b();
+	}
+
+	public void del1b() {
+		readInput(18, 0);
+//		System.out.println(_space);
+//		System.out.println(_keysAndDoors);
+//		System.out.println("nycklar&dörrar: " + printKeys(_keysAndDoors));
+//		print(_space, _keysAndDoors);
+		Point start = null;
+		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
+			if (entry.getValue().equals("@")) {
+				start = entry.getKey();
+			}
+		}
+//		System.out.println(start);
+		getNeighbors();
+//		System.out.println("neighbors " + _neighbors);
+		getDistances();
+//		System.out.println("key dist " + _keyDistances);
+		String keysAndDoors = printKeys(_keysAndDoors);
+		for (int i = 0; i < keysAndDoors.length(); i++) {
+			if (keysAndDoors.substring(i, i + 1).equals(keysAndDoors.substring(i, i + 1).toLowerCase())) {
+				_numberOfKeys++;
+			}
+		}
+		System.out.println("no keys: " + _numberOfKeys);
+		System.out.println("Del 1: " + rec("@", "", 0));
+	}
+
+//	private String cleanStringFromString(String a, String b) {
+//		String ret = "";
+//		for (int i = 0; i < b.length(); i++) {
+//			String letter = b.substring(i, i + 1);
+//			if (!a.contains(letter)) {
+//				ret += letter;
+//			}
+//		}
+//		return ret;
+//	}
+
+	private int rec(String key, String visitedKeys, int dist) {
+		Set<String> nowVisible = new HashSet<>();
+		int insight = 0;
+		if (dist >= _bestDistance) {// om vi kommit hit och dist är > bestDistance, avbryt direkt, BFS
+//			System.out.println("cut tree at dist: " + dist + " best: " + _bestDistance);
+			return Integer.MAX_VALUE;
+		}
+		String outVisitedKeys = visitedKeys + key;
+		if (outVisitedKeys.length() == _numberOfKeys) {// sista nyckeln
+			if (dist < _bestDistance) { // bättre
+				_bestDistance = dist;
+			}
+		}
+		// bygg upp vilka nästa tänkbara nycklar är
+		// slå ihop alla neighbors från besökta
+		// och ta bort besökta keys, och dubletter
+		// expandera borttagna dörrar, dvs dörrar i urvalet ovan som ingår i
+		// visitedKeys, fortsätt tills inga fler dörrar kan expanderas
+		for (int i = 0; i < outVisitedKeys.length(); i++) {
+			String grannar = _neighbors.get(outVisitedKeys.substring(i, i + 1));
+			for (int j = 0; j < grannar.length(); j++) {
+				nowVisible.add(grannar.substring(j, j + 1));
+			}
+		}
+		do {
+			insight = nowVisible.size();
+			for (int i = 0; i < outVisitedKeys.length(); i++) {
+				String granne = outVisitedKeys.substring(i, i + 1);
+				if (nowVisible.contains(granne.toUpperCase())) { // vi ser en dörr som öppnats
+					String grann = _neighbors.get(granne.toUpperCase()); // vad ser dörren
+					boolean found = false;
+					for (int j = 0; j < grann.length(); j++) {
+						if (outVisitedKeys.contains(grann.substring(j, j + 1))) {
+							found = true;
+						}
+					}
+					if (found) {
+						for (int j = 0; j < grann.length(); j++) {
+							if (!outVisitedKeys.contains(grann.substring(j, j + 1))) {
+								nowVisible.add(grann.substring(j, j + 1));
+							}
+						}
+					}
+				}
+			}
+		} while (insight != nowVisible.size());
+		// ta bort besökta nycklar
+		for (int i = 0; i < outVisitedKeys.length(); i++) {
+				nowVisible.remove(outVisitedKeys.substring(i, i + 1));
+		}
+		// ta bort dörrar som tänkbara kandidater på nycklar
+		nowVisible.removeIf(s -> s.equals(s.toUpperCase()));
+		
+//		System.out.println("ser: " +nowVisible);
+		
+		// sort and call shortest
+		int returnShortest = Integer.MAX_VALUE;
+		while (nowVisible.size() > 0) {
+			int shortest = Integer.MAX_VALUE;
+			String keyNext = "";
+			for (String s : nowVisible) {
+//				System.out.println("key " + key + " s " + s);
+				int distance = _keyDistances.get(key + s);
+				if (shortest > distance) {
+					keyNext = s;
+					shortest = distance;
+				}
+			}
+			nowVisible.remove(keyNext);
+			returnShortest = Math.min(returnShortest, rec(keyNext, outVisitedKeys, dist +shortest));
+		}
+		return returnShortest;
+	}
+
+	private void getDistances() {
+		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
+			if (entry.getValue().equals(entry.getValue().toLowerCase())) { // ingen dörr
+				boolean full = false;
+				int dist = 0;
+				_space.put(entry.getKey(), 1);
+				while (!full) {
+					full = true;// nollställs om vi uppdaterat något
+					dist++;
+					Point punkt;
+					for (Entry<Point, Integer> ent : _space.entrySet()) {// flooding
+						if (ent.getValue().equals(dist)) { // hittat det som skall expandera i 4 riktningar
+							punkt = ent.getKey();
+							Point sidoPunkter[] = new Point[4];
+							sidoPunkter[0] = new Point(punkt.x + 1, punkt.y);
+							sidoPunkter[1] = new Point(punkt.x - 1, punkt.y);
+							sidoPunkter[2] = new Point(punkt.x, punkt.y + 1);
+							sidoPunkter[3] = new Point(punkt.x, punkt.y - 1);
+							for (int i = 0; i < 4; i++) {
+								Point sido = sidoPunkter[i];
+								if (_space.get(sido) != null) {// är det ens i grottan?
+									String maybe;
+									maybe = _keysAndDoors.get(sido);
+									if (maybe != null) { // här ligger det visst en nyckel eller dörr
+										if (maybe.equals(maybe.toLowerCase())) { // key
+											if (!maybe.equals(entry.getValue())) {
+												if (_keyDistances.get(entry.getValue() + maybe) == null) {// första
+																											// träffen
+													_keyDistances.put(entry.getValue() + maybe, dist);
+													_keyDistances.put(maybe + entry.getValue(), dist);
+												}
+											}
+										}
+									}
+									if (_space.get(sido) == 0) {
+										_space.put(sido, dist + 1);
+										full = false;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+//			print(_space, _keysAndDoors);
+			for (Entry<Point, Integer> e : _space.entrySet()) {// rensa
+				_space.put(e.getKey(), 0);
+			}
+		}
+	}
+
+	private void getNeighbors() {
+		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
+			boolean full = false;
+			int dist = 0;
+			String see = "";
+			_space.put(entry.getKey(), 1);
+			while (!full) {
+				full = true;// nollställs om vi uppdaterat något
+				dist++;
+				Point punkt;
+				for (Entry<Point, Integer> ent : _space.entrySet()) {// flooding
+					if (ent.getValue().equals(dist)) { // hittat det som skall expandera i 4 riktningar
+						punkt = ent.getKey();
+						Point sidoPunkter[] = new Point[4];
+						sidoPunkter[0] = new Point(punkt.x + 1, punkt.y);
+						sidoPunkter[1] = new Point(punkt.x - 1, punkt.y);
+						sidoPunkter[2] = new Point(punkt.x, punkt.y + 1);
+						sidoPunkter[3] = new Point(punkt.x, punkt.y - 1);
+						for (int i = 0; i < 4; i++) {
+							Point sido = sidoPunkter[i];
+							if (_space.get(sido) != null) {// är det ens i grottan?
+								String maybe;
+								maybe = _keysAndDoors.get(sido);
+								if (maybe != null) { // här ligger det visst en nyckel eller dörr
+									if (!maybe.equals(entry.getValue())) {// ej sig själv
+										see += maybe;
+
+//												if(_neighborskeyDistances.get(entry.getValue() + maybe) == null) {//första träffen
+//													_keyDistances.put(entry.getValue() + maybe, dist);
+//													_keyDistances.put(maybe + entry.getValue(), dist);
+//												}
+									}
+								} else {
+									if (_space.get(sido) == 0) {
+										_space.put(sido, dist + 1);
+										full = false;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			_neighbors.put(entry.getValue(), see);
+//			print(_space, _keysAndDoors);
+			for (Entry<Point, Integer> e : _space.entrySet()) {// rensa
+				_space.put(e.getKey(), 0);
+			}
+		}
+
 	}
 
 	public void del1() {
@@ -45,25 +267,29 @@ public class AoC_18 {
 		// deepcopy
 		Point egenPunkt = new Point(from.x, from.y);
 		for (Entry<Point, String> entry : keysLeft.entrySet()) {
-			keysLeftEgen.put(new Point(entry.getKey().x, entry.getKey().y), entry.getValue());
+			keysLeftEgen.put(new Point(entry.getKey().x, entry.getKey().y), new String(entry.getValue()));
 		}
 		for (Entry<Point, Integer> entry : _space.entrySet()) {
-			spaceEgen.put(new Point(entry.getKey().x, entry.getKey().y), entry.getValue());
+			spaceEgen.put(new Point(entry.getKey().x, entry.getKey().y), new Integer(entry.getValue()));
 		}
-		printKeys(keysLeftEgen);		
+
+		System.out.println(printKeys(keysLeftEgen));
+		print(spaceEgen, keysLeftEgen);
+
 		String key;
-		int distance = Integer.MAX_VALUE/2;
+		int distance = Integer.MAX_VALUE / 2;
 		int cDistance = 0;
 		boolean full = false;
+
 		// remove key and open door at point from (if key is start only remove key)
 		key = keysLeftEgen.get(egenPunkt);
 		if (keysLeftEgen.size() == 1) { // om det är sista nyckeln return 0
 //			System.out.println("sista nyckeln");
-			String text = scan.nextLine();
+//			String text = scan.nextLine();
 			return 0;
 		}
 		if (key == null) {
-			System.out.println("ingen key at " + egenPunkt);
+//			System.out.println("ingen key at " + egenPunkt);
 		} else if (key.equals("@")) { // startpunkten
 //			System.out.println("tar bort @");
 			keysLeftEgen.remove(egenPunkt);
@@ -77,17 +303,18 @@ public class AoC_18 {
 					door = entry.getKey();
 				}
 			}
-			System.out.println("tar bort key " + nyckel );
+//			System.out.println("tar bort key " + nyckel);
 			keysLeftEgen.remove(egenPunkt);
 			if (door != null) {
 				keysLeftEgen.remove(door);
 //				System.out.println("tar bort dörr");
 			}
 		}
+
 //		System.out.println("NY INSTANS startar med size " + keysLeftEgen.size());
 //		System.out.println("NY INSTANS startar med size " + egenPunkt);
 //		print(spaceEgen,keysLeftEgen);
-		
+
 		// fyll ut space anropa om vi hittar nycklar
 		spaceEgen.put(egenPunkt, 1);
 		while (!full) {
@@ -134,41 +361,43 @@ public class AoC_18 {
 			for (Entry<Point, Integer> entry : incSpaceAfter.entrySet()) {
 				spaceEgen.put(entry.getKey(), entry.getValue());
 			}
+
 		}
+		System.out.println("klart med expansionen");
+		print(spaceEgen, keysLeftEgen);
 		// anropa de val som finns
-//		System.out.println("vi har " + alternativeKeys.size() + " rekursiva anrop att göra");
+		System.out.println("vi har " + alternativeKeys.size() + " rekursiva anrop att göra");
 		for (Entry<Point, Integer> entry : alternativeKeys.entrySet()) {
 //			System.out.println("!!anropar rekursivt " + entry.getKey() + " med distance " + entry.getValue());
 			int tempdist = entry.getValue() + recGetKeys(entry.getKey(), keysLeftEgen);
 			if (tempdist < distance) {
-				System.out.println("better dist " + tempdist + " < " + distance);
+//				System.out.println("better dist " + tempdist + " < " + distance);
 				distance = tempdist;
 			} else {
-				System.out.println("same or worse dist " + tempdist + " < " + distance);				
+//				System.out.println("same or worse dist " + tempdist + " < " + distance);
 			}
 		}
-		// System.out.println(keysLeftEgen);
+		System.out.println("kortaste dist efter rek anropen " + distance);
+		System.out.println(keysLeftEgen);
 		return distance;
 	}
-	
-	
 
 	public static void del2() {
 		// readInput(16, 0);
 	}
 
-	void printKeys(HashMap<Point, String> keys) {
+	private String printKeys(HashMap<Point, String> keys) {
 		String s = "";
 		for (Entry<Point, String> entry : keys.entrySet()) {
 			s += entry.getValue();
 		}
-		System.out.println(s);
+		return s;
 	}
 
 	void print(HashMap<Point, Integer> cave, HashMap<Point, String> keys) {
 		String s = "", k = "";
 		Integer c = 0;
-		Scanner scan = new Scanner(System.in);
+//		Scanner scan = new Scanner(System.in);
 
 		int maxx = 0, maxy = 0;
 		for (Point key : cave.keySet()) {
@@ -183,7 +412,8 @@ public class AoC_18 {
 				if (c == null) {
 					s += "#";
 				} else if (k == null) {
-					s += ".";
+					s += "" + (c % 10);
+					// s += ".";
 				} else {
 					s += k;
 				}
@@ -191,7 +421,7 @@ public class AoC_18 {
 			System.out.println(s);
 			s = "";
 		}
-		String text = scan.nextLine();
+//		String text = scan.nextLine();
 	}
 
 	private void clearSpace() {
