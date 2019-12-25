@@ -18,6 +18,7 @@ public class AoC_18 {
 	static HashMap<String, Integer> _keyDistances = new HashMap<>();
 	static Integer _bestDistance = Integer.MAX_VALUE;
 	static Integer _numberOfKeys = 0;
+	private Graph _graf;
 
 	public static void main(final String[] args) {
 		final AoC_18 a = new AoC_18();
@@ -26,7 +27,113 @@ public class AoC_18 {
 
 	public void run() {
 		// del1();
-		del1b();
+//		del1b();
+		del1c();
+	}
+
+	public void del1c() {
+		readInput(18, 4);
+//		System.out.println(_space);
+//		System.out.println(_keysAndDoors);
+//		System.out.println("nycklar&dörrar: " + printKeys(_keysAndDoors));
+		print(_space, _keysAndDoors);
+//		Point start = null;
+//		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
+//			if (entry.getValue().equals("@")) {
+//				start = entry.getKey();
+//			}
+//		}
+//		System.out.println(start);
+		getNeighbors();
+//		System.out.println("neighbors " + _neighbors);
+		getDistances();
+//		System.out.println(_keyDistances);
+		_graf = new Graph();
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // skapa noder
+			_graf.createNode(new Node(entry.getKey()));
+		}
+		int id = 1;
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // anslut dem
+			for (int i = 0; i < entry.getValue().length(); i++) {
+				String thisNode = entry.getKey();
+				String otherNode = entry.getValue().substring(i, i + 1);
+				int dist = _keyDistances.get(thisNode + otherNode);
+				Node thisN = _graf.getNode(thisNode);
+				Node otherN = _graf.getNode(otherNode);
+				Edge e1 = new Edge(thisN, otherN, dist, id++);
+				// Edge e2 = new Edge(otherN, thisN , dist , id++);
+				thisN.addNeighbour(e1);
+				// otherN.addNeighbour(e2);
+			}
+		}
+//		System.out.println(_neighbors.get("@"));
+//		System.out.println(graf.getNumberOfNodes());
+
+		// gör istället en rekursiv sökning BFS
+
+//		String visitedNodes = "";
+//		String res = "";
+//		res = graf.getNode("@").getUnvisitedNeighbours(visitedNodes);
+//		System.out.println("svar: " + res);
+//		visitedNodes += "@";
+//
+//		String res2 = "";
+//		for (int i = 0; i < res.length(); i++) {
+//			res2 += graf.getNode(res.substring(i, i + 1)).getUnvisitedNeighbours(visitedNodes);
+//		}
+//		
+//		System.out.println("svar: " + res2);
+//		
+//		visitedNodes += res2;
+//		
+//		
+////		String clean = cleanStringFromString("@", res2);
+////		System.out.println("clean svar: " + clean);
+//		String undup = cleanStringFromDublicates(res2);
+//		
+//		String res3 = "";
+//		for (int i = 0; i < res2.length(); i++) {
+//			res3 += graf.getNode(res2.substring(i, i + 1)).getUnvisitedNeighbours(visitedNodes);
+//		}
+//		
+//		String undup2 = cleanStringFromDublicates(res3);
+//		
+//		
+//		System.out.println("unduplicate svar: " + undup2);
+//		System.out.println("just nodes svar: " + cleanStringFromVersals(undup2));
+
+		System.out.println("Del 1: " + rec2("@", 0));
+	}
+
+	private int rec2(String path, int bestDist) {
+		
+		String currentNode = path.substring(path.length() - 1, path.length());
+		String visit = "";
+
+		for (int i = 0; i < path.length(); i++) {
+			visit += _graf.getNode(path.substring(i, i + 1)).getNeighbours(true);
+		}
+
+//		System.out.println(visit);
+		visit = cleanStringFromString(path, visit);
+//		System.out.println(visit);
+
+		visit = cleanStringFromDublicates(visit);
+//		System.out.println(visit);
+
+
+		int bestDistFromThisNode = Integer.MAX_VALUE;
+
+		for (int i = 0; i < visit.length(); i++) {
+			
+			String n = visit.substring(i, i + 1);
+//			System.out.println("curr " + currentNode + " n " + n);
+			int dist = _keyDistances.get(currentNode + n);
+//			System.out.println("dist: " + dist);
+			
+			bestDistFromThisNode = Math.min(bestDistFromThisNode, rec2(path + n, dist));
+		}
+		return bestDistFromThisNode;
 	}
 
 	public void del1b() {
@@ -56,16 +163,38 @@ public class AoC_18 {
 		System.out.println("Del 1: " + rec("@", "", 0));
 	}
 
-//	private String cleanStringFromString(String a, String b) {
-//		String ret = "";
-//		for (int i = 0; i < b.length(); i++) {
-//			String letter = b.substring(i, i + 1);
-//			if (!a.contains(letter)) {
-//				ret += letter;
-//			}
-//		}
-//		return ret;
-//	}
+	private String cleanStringFromString(String a, String b) {
+		String ret = "";
+		for (int i = 0; i < b.length(); i++) {
+			String letter = b.substring(i, i + 1);
+			if (!a.contains(letter)) {
+				ret += letter;
+			}
+		}
+		return ret;
+	}
+
+	private String cleanStringFromDublicates(String a) {
+		String ret = "";
+		for (int i = 0; i < a.length(); i++) {
+			String letter = a.substring(i, i + 1);
+			if (!ret.contains(letter)) {
+				ret += letter;
+			}
+		}
+		return ret;
+	}
+
+	private String cleanStringFromVersals(String a) {
+		String ret = "";
+		for (int i = 0; i < a.length(); i++) {
+			String letter = a.substring(i, i + 1);
+			if (letter.equals(letter.toLowerCase())) {
+				ret += letter;
+			}
+		}
+		return ret;
+	}
 
 	private int rec(String key, String visitedKeys, int dist) {
 		Set<String> nowVisible = new HashSet<>();
@@ -115,13 +244,13 @@ public class AoC_18 {
 		} while (insight != nowVisible.size());
 		// ta bort besökta nycklar
 		for (int i = 0; i < outVisitedKeys.length(); i++) {
-				nowVisible.remove(outVisitedKeys.substring(i, i + 1));
+			nowVisible.remove(outVisitedKeys.substring(i, i + 1));
 		}
 		// ta bort dörrar som tänkbara kandidater på nycklar
 		nowVisible.removeIf(s -> s.equals(s.toUpperCase()));
-		
+
 //		System.out.println("ser: " +nowVisible);
-		
+
 		// sort and call shortest
 		int returnShortest = Integer.MAX_VALUE;
 		while (nowVisible.size() > 0) {
@@ -136,55 +265,55 @@ public class AoC_18 {
 				}
 			}
 			nowVisible.remove(keyNext);
-			returnShortest = Math.min(returnShortest, rec(keyNext, outVisitedKeys, dist +shortest));
+			returnShortest = Math.min(returnShortest, rec(keyNext, outVisitedKeys, dist + shortest));
 		}
 		return returnShortest;
 	}
 
 	private void getDistances() {
 		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
-			if (entry.getValue().equals(entry.getValue().toLowerCase())) { // ingen dörr
-				boolean full = false;
-				int dist = 0;
-				_space.put(entry.getKey(), 1);
-				while (!full) {
-					full = true;// nollställs om vi uppdaterat något
-					dist++;
-					Point punkt;
-					for (Entry<Point, Integer> ent : _space.entrySet()) {// flooding
-						if (ent.getValue().equals(dist)) { // hittat det som skall expandera i 4 riktningar
-							punkt = ent.getKey();
-							Point sidoPunkter[] = new Point[4];
-							sidoPunkter[0] = new Point(punkt.x + 1, punkt.y);
-							sidoPunkter[1] = new Point(punkt.x - 1, punkt.y);
-							sidoPunkter[2] = new Point(punkt.x, punkt.y + 1);
-							sidoPunkter[3] = new Point(punkt.x, punkt.y - 1);
-							for (int i = 0; i < 4; i++) {
-								Point sido = sidoPunkter[i];
-								if (_space.get(sido) != null) {// är det ens i grottan?
-									String maybe;
-									maybe = _keysAndDoors.get(sido);
-									if (maybe != null) { // här ligger det visst en nyckel eller dörr
-										if (maybe.equals(maybe.toLowerCase())) { // key
-											if (!maybe.equals(entry.getValue())) {
-												if (_keyDistances.get(entry.getValue() + maybe) == null) {// första
-																											// träffen
-													_keyDistances.put(entry.getValue() + maybe, dist);
-													_keyDistances.put(maybe + entry.getValue(), dist);
-												}
+//			if (entry.getValue().equals(entry.getValue().toLowerCase())) { // ingen dörr
+			boolean full = false;
+			int dist = 0;
+			_space.put(entry.getKey(), 1);
+			while (!full) {
+				full = true;// nollställs om vi uppdaterat något
+				dist++;
+				Point punkt;
+				for (Entry<Point, Integer> ent : _space.entrySet()) {// flooding
+					if (ent.getValue().equals(dist)) { // hittat det som skall expandera i 4 riktningar
+						punkt = ent.getKey();
+						Point sidoPunkter[] = new Point[4];
+						sidoPunkter[0] = new Point(punkt.x + 1, punkt.y);
+						sidoPunkter[1] = new Point(punkt.x - 1, punkt.y);
+						sidoPunkter[2] = new Point(punkt.x, punkt.y + 1);
+						sidoPunkter[3] = new Point(punkt.x, punkt.y - 1);
+						for (int i = 0; i < 4; i++) {
+							Point sido = sidoPunkter[i];
+							if (_space.get(sido) != null) {// är det ens i grottan?
+								String maybe;
+								maybe = _keysAndDoors.get(sido);
+								if (maybe != null) { // här ligger det visst en nyckel eller dörr
+//									if (maybe.equals(maybe.toLowerCase())) { // key
+										if (!maybe.equals(entry.getValue())) {
+											if (_keyDistances.get(entry.getValue() + maybe) == null) {// första
+																										// träffen
+												_keyDistances.put(entry.getValue() + maybe, dist);
+												_keyDistances.put(maybe + entry.getValue(), dist);
 											}
 										}
-									}
-									if (_space.get(sido) == 0) {
-										_space.put(sido, dist + 1);
-										full = false;
-									}
+//									}
+								}
+								if (_space.get(sido) == 0) {
+									_space.put(sido, dist + 1);
+									full = false;
 								}
 							}
 						}
 					}
 				}
 			}
+//			}
 //			print(_space, _keysAndDoors);
 			for (Entry<Point, Integer> e : _space.entrySet()) {// rensa
 				_space.put(e.getKey(), 0);
