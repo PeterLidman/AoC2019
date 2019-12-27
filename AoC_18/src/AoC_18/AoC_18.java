@@ -5,20 +5,35 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AoC_18 {
 	static HashMap<Point, Integer> _space = new HashMap<>();
 	static HashMap<Point, String> _keysAndDoors = new HashMap<>();
 	static HashMap<String, String> _neighbors = new HashMap<>();
+
 	static HashMap<String, Integer> _keyDistances = new HashMap<>();
+
+	static HashMap<Set<String>, Set<String>> _memoizationReachableKeys = new HashMap<>();
+
+	// static HashMap<Set<String>, Integer> _memoizationStateToDistance = new
+	// HashMap<>();
+	static HashMap<String, HashMap<Set<String>, Integer>> _memoizationCurrentKeyAndStateToDistance = new HashMap<>();
+
+	static HashMap<String, String> _memoization = new HashMap<>();
 	static Integer _bestDistance = Integer.MAX_VALUE;
 	static Integer _numberOfKeys = 0;
 	private Graph _graf;
+	private String _keysToFind;
 
 	public static void main(final String[] args) {
 		final AoC_18 a = new AoC_18();
@@ -28,7 +43,274 @@ public class AoC_18 {
 	public void run() {
 		// del1();
 //		del1b();
-		del1c();
+//		del1c();
+		// del1d();
+		del1e();
+	}
+
+	public void del1e() {
+		readInput(18, 0);
+		getNeighbors();
+		getDistances();
+		_graf = new Graph();
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // skapa noder
+			_graf.createNode(new Node(entry.getKey()));
+		}
+		int id = 1;
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // anslut dem
+			for (int i = 0; i < entry.getValue().length(); i++) {
+				String thisNode = entry.getKey();
+				String otherNode = entry.getValue().substring(i, i + 1);
+				int dist = _keyDistances.get(thisNode + otherNode);
+				Node thisN = _graf.getNode(thisNode);
+				Node otherN = _graf.getNode(otherNode);
+				Edge e1 = new Edge(thisN, otherN, dist, id++);
+				// Edge e2 = new Edge(otherN, thisN , dist , id++);
+				thisN.addNeighbour(e1);
+				// otherN.addNeighbour(e2);
+			}
+		}
+		String keysAndDoors = printKeys(_keysAndDoors);
+		_keysToFind = "";
+		for (int i = 0; i < keysAndDoors.length(); i++) {
+			if (keysAndDoors.substring(i, i + 1).equals(keysAndDoors.substring(i, i + 1).toLowerCase())) {
+				_numberOfKeys++;
+				_keysToFind += keysAndDoors.substring(i, i + 1);
+			}
+		}
+		System.out.println("Number of keys: " + _numberOfKeys);
+		System.out.println("all keys: " + _keysToFind);
+		for (int i = 0; i < _keysToFind.length(); i++) { // init memo hashmap
+			_memoizationCurrentKeyAndStateToDistance.put(_keysToFind.substring(i, i + 1),
+					new HashMap<Set<String>, Integer>());
+		}
+
+//		System.out.println("all keys: " + _keyDistances);
+//		System.out.println(_graf.getNode("G").getNeighbours(false));
+//		System.out.println("Dist GH : " + _keyDistances.get("GH"));
+//		System.out.println("Dist im : " + _keyDistances.get("im"));
+//		System.out.println("Dist lp : " + _keyDistances.get("lp"));
+//		Set<String> test = new HashSet<>();
+//		test.add("@");
+//		test.add("f");
+//		test.add("a");
+//		test.add("c");
+//		test.add("i");
+//		test.add("d");
+//		test.add("g");
+//		test.add("e");
+//		test.add("b");
+//		test.add("h");
+//		System.out.println("test " + test);
+//		System.out.println("memo " + getPossibleDestinationMemoization(test));
+		System.out.println("nu då??" + rec3("@", 0));
+	}
+
+	private Set<String> getSetFromString(String inStr) {
+		Set<String> ret = new TreeSet<>();
+		for (int i = 0; i < inStr.length(); i++) {
+			ret.add(inStr.substring(i, i + 1));
+		}
+		return ret;
+	}
+
+	private Set<String> getRemainingStateFromPath(String path) {
+		Set<String> ret = new TreeSet<>();
+//		System.out.println(path);
+		for (int i = 0; i < _keysToFind.length(); i++) {
+			String tkn = _keysToFind.substring(i, i + 1);
+			if (!path.contains(tkn)) {
+				ret.add(tkn);
+			}
+		}
+//		System.out.println(ret);
+		return ret;
+	}
+
+	private int rec3(String path, int bestDist) {
+		String currentNode = path.substring(path.length() - 1, path.length());
+		String pathBefore = path.substring(0, path.length() - 1);
+		Set<String> stateBefore = getSetFromString(pathBefore);
+
+		Set<String> state = getSetFromString(path);
+		if (state.size() == _numberOfKeys) {
+			System.out.println("DONE: dist: " + bestDist);
+			return bestDist;
+		}
+		Integer bestDistFromThisNode = _memoizationCurrentKeyAndStateToDistance.get(currentNode).get(stateBefore);
+		if (bestDistFromThisNode != null) {
+			System.out.println("I FOUND MEMO!");
+			return bestDistFromThisNode + bestDist;
+		}
+
+		bestDistFromThisNode = Integer.MAX_VALUE / 2;
+		Set<String> visit = getPossibleDestinationMemoization(state);
+
+		System.out.println("visit: " + visit);
+
+		if (visit.isEmpty()) {
+			if (state.size() < _numberOfKeys) {
+				System.out.println("IMPOSSIBLE ROUTE!");
+				return Integer.MAX_VALUE / 2;
+			}
+			System.out.println("ETT LÖV!!");
+			return bestDist;
+		}
+
+		for (String s : visit) {
+			int dist = _keyDistances.get(currentNode + s);
+			System.out.println("path " + path + " visiting " + s + " dist: " + dist + " bestdist " + bestDist);
+			bestDistFromThisNode = Math.min(bestDistFromThisNode, rec3(path + s, bestDist + dist));
+		}
+
+		System.out.println(
+				"I SAVE MEMO! key: " + path.length() + currentNode + " value " + (bestDistFromThisNode - bestDist));
+
+		_memoizationCurrentKeyAndStateToDistance.get(currentNode).put(stateBefore, bestDistFromThisNode - bestDist);
+
+		return bestDistFromThisNode;
+	}
+
+	private Set<String> getPossibleDestinationMemoization(Set<String> takenKeys) {
+		Set<String> reach = _memoizationReachableKeys.get(takenKeys);
+		if (reach != null) {
+			return reach;
+		}
+
+		String openDoors = "";
+		for (String key : takenKeys) {
+			openDoors += key;
+		}
+		openDoors = openDoors.toUpperCase();
+		final String finalOpenDoors = openDoors;
+
+		reach = new HashSet<>();
+		for (String key : takenKeys) {
+			String n = _neighbors.get(key);
+			for (int i = 0; i < n.length(); i++) {
+				reach.add(n.substring(i, i + 1));
+			}
+		}
+//		System.out.println("reach before " + reach);
+		reach.removeIf((String element) -> { // remove closed doors
+			return (!finalOpenDoors.contains(element) && element.equals(element.toUpperCase()));
+		});
+//		System.out.println("reach before " + reach);
+//öppna dörrar, akta för cirkulär loop
+		Set<String> previousReach;
+		do {
+			previousReach = new HashSet<>(reach);
+			for (String key : previousReach) {
+				if (openDoors.contains(key)) {// it's a door, and it's open
+					String n = _neighbors.get(key); // open door sees
+					for (int i = 0; i < n.length(); i++) {
+						String tkn = n.substring(i, i + 1);
+						// if (tkn.equals(key)) { // lägg inte till dörren vi öppnar igen
+						reach.add(tkn);
+						// }
+					}
+				}
+			}
+			// rensa ev stängda dörrar vi lagt till
+			reach.removeIf((String element) -> { // remove closed doors
+				return (!finalOpenDoors.contains(element) && element.equals(element.toUpperCase()));
+			});
+		} while (previousReach.size() != reach.size());
+//		System.out.println("bef fin reach " + reach);
+		for (String key : takenKeys) {// remove open doors and visited keys
+			reach.remove(key.toUpperCase());
+			reach.remove(key);
+		}
+//		System.out.println("final reach " + reach);
+		// remember this crazy computation
+		_memoizationReachableKeys.put(takenKeys, reach);
+//		System.out.println("Memo size: " + _memoizationReachableKeys.size());
+		return reach;
+	}
+
+	public static String sortString1(String inputString) {
+		char tempArray[] = inputString.toCharArray();
+		Arrays.sort(tempArray);
+		return new String(tempArray);
+	}
+
+	public static String sortString2(String inputString) {
+		Character tempArray[] = new Character[inputString.length()];
+		for (int i = 0; i < inputString.length(); i++) {
+			tempArray[i] = inputString.charAt(i);
+		}
+		Arrays.sort(tempArray, new Comparator<Character>() {
+			@Override
+			public int compare(Character c1, Character c2) {
+				// ignoring case
+				return Character.compare(Character.toLowerCase(c1), Character.toLowerCase(c2));
+			}
+		});
+		StringBuilder sb = new StringBuilder(tempArray.length);
+		for (Character c : tempArray)
+			sb.append(c.charValue());
+		return sb.toString();
+	}
+
+	public static String sortString3(String inputString) {
+		return Stream.of(inputString.split("")).sorted().collect(Collectors.joining());
+	}
+
+	public void del1d() {
+		readInput(18, 4);
+		getNeighbors();
+		getDistances();
+		_graf = new Graph();
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // skapa noder
+			_graf.createNode(new Node(entry.getKey()));
+		}
+		int id = 1;
+		for (Entry<String, String> entry : _neighbors.entrySet()) { // anslut dem
+			for (int i = 0; i < entry.getValue().length(); i++) {
+				String thisNode = entry.getKey();
+				String otherNode = entry.getValue().substring(i, i + 1);
+				int dist = _keyDistances.get(thisNode + otherNode);
+				Node thisN = _graf.getNode(thisNode);
+				Node otherN = _graf.getNode(otherNode);
+				Edge e1 = new Edge(thisN, otherN, dist, id++);
+				// Edge e2 = new Edge(otherN, thisN , dist , id++);
+				thisN.addNeighbour(e1);
+				// otherN.addNeighbour(e2);
+			}
+		}
+
+		String keysAndDoors = printKeys(_keysAndDoors);
+		String keysToFind = "";
+
+		for (int i = 0; i < keysAndDoors.length(); i++) {
+			if (keysAndDoors.substring(i, i + 1).equals(keysAndDoors.substring(i, i + 1).toLowerCase())) {
+				_numberOfKeys++;
+				keysToFind += keysAndDoors.substring(i, i + 1);
+			}
+		}
+//		System.out.println("no keys: " + _numberOfKeys);
+//		System.out.println("all keys: " + keysToFind);
+		System.out.println("all keys: " + _keyDistances);
+
+		System.out.println("Del 1: " + distanceToCollectKeys("@", keysToFind));
+
+	}
+
+	private int distanceToCollectKeys(String currentKey, String keys) {
+		int result = Integer.MAX_VALUE / 2;
+		if (keys.length() == 0) {
+			return 0;
+		}
+		String visit = _neighbors.get(currentKey);
+		visit = stringIntersection(visit, keys);
+		for (int i = 0; i < visit.length(); i++) {
+			String key = visit.substring(i, i + 1);
+			int dist = _keyDistances.get(currentKey + key);
+
+			int d = dist + distanceToCollectKeys(key, cleanStringFromString(key, keys));
+			result = Math.min(result, d);
+		}
+		return result;
 	}
 
 	public void del1c() {
@@ -66,48 +348,14 @@ public class AoC_18 {
 				// otherN.addNeighbour(e2);
 			}
 		}
-//		System.out.println(_neighbors.get("@"));
-//		System.out.println(graf.getNumberOfNodes());
-
-		// gör istället en rekursiv sökning BFS
-
-//		String visitedNodes = "";
-//		String res = "";
-//		res = graf.getNode("@").getUnvisitedNeighbours(visitedNodes);
-//		System.out.println("svar: " + res);
-//		visitedNodes += "@";
-//
-//		String res2 = "";
-//		for (int i = 0; i < res.length(); i++) {
-//			res2 += graf.getNode(res.substring(i, i + 1)).getUnvisitedNeighbours(visitedNodes);
-//		}
-//		
-//		System.out.println("svar: " + res2);
-//		
-//		visitedNodes += res2;
-//		
-//		
-////		String clean = cleanStringFromString("@", res2);
-////		System.out.println("clean svar: " + clean);
-//		String undup = cleanStringFromDublicates(res2);
-//		
-//		String res3 = "";
-//		for (int i = 0; i < res2.length(); i++) {
-//			res3 += graf.getNode(res2.substring(i, i + 1)).getUnvisitedNeighbours(visitedNodes);
-//		}
-//		
-//		String undup2 = cleanStringFromDublicates(res3);
-//		
-//		
-//		System.out.println("unduplicate svar: " + undup2);
-//		System.out.println("just nodes svar: " + cleanStringFromVersals(undup2));
 
 		System.out.println("Del 1: " + rec2("@", 0));
 	}
 
 	private int rec2(String path, int bestDist) {
-		
+
 		String currentNode = path.substring(path.length() - 1, path.length());
+
 		String visit = "";
 
 		for (int i = 0; i < path.length(); i++) {
@@ -121,17 +369,16 @@ public class AoC_18 {
 		visit = cleanStringFromDublicates(visit);
 //		System.out.println(visit);
 
-
-		int bestDistFromThisNode = Integer.MAX_VALUE;
+		int bestDistFromThisNode = Integer.MAX_VALUE / 2;
 
 		for (int i = 0; i < visit.length(); i++) {
-			
+
 			String n = visit.substring(i, i + 1);
 //			System.out.println("curr " + currentNode + " n " + n);
 			int dist = _keyDistances.get(currentNode + n);
 //			System.out.println("dist: " + dist);
-			
-			bestDistFromThisNode = Math.min(bestDistFromThisNode, rec2(path + n, dist));
+
+			bestDistFromThisNode = Math.min(bestDistFromThisNode, rec2(path + n, bestDist + dist));
 		}
 		return bestDistFromThisNode;
 	}
@@ -168,6 +415,17 @@ public class AoC_18 {
 		for (int i = 0; i < b.length(); i++) {
 			String letter = b.substring(i, i + 1);
 			if (!a.contains(letter)) {
+				ret += letter;
+			}
+		}
+		return ret;
+	}
+
+	private String stringIntersection(String a, String b) {
+		String ret = "";
+		for (int i = 0; i < b.length(); i++) {
+			String letter = b.substring(i, i + 1);
+			if (a.contains(letter)) {
 				ret += letter;
 			}
 		}
@@ -295,13 +553,13 @@ public class AoC_18 {
 								maybe = _keysAndDoors.get(sido);
 								if (maybe != null) { // här ligger det visst en nyckel eller dörr
 //									if (maybe.equals(maybe.toLowerCase())) { // key
-										if (!maybe.equals(entry.getValue())) {
-											if (_keyDistances.get(entry.getValue() + maybe) == null) {// första
-																										// träffen
-												_keyDistances.put(entry.getValue() + maybe, dist);
-												_keyDistances.put(maybe + entry.getValue(), dist);
-											}
+									if (!maybe.equals(entry.getValue())) {
+										if (_keyDistances.get(entry.getValue() + maybe) == null) {// första
+																									// träffen
+											_keyDistances.put(entry.getValue() + maybe, dist);
+											_keyDistances.put(maybe + entry.getValue(), dist);
 										}
+									}
 //									}
 								}
 								if (_space.get(sido) == 0) {
@@ -375,6 +633,7 @@ public class AoC_18 {
 
 	public void del1() {
 		readInput(18, 4);
+
 		Point start = null;
 		for (Entry<Point, String> entry : _keysAndDoors.entrySet()) {
 			if (entry.getValue().equals("@")) {
@@ -390,6 +649,7 @@ public class AoC_18 {
 		Scanner scan = new Scanner(System.in);
 		HashMap<Point, String> keysLeftEgen = new HashMap<>();
 		HashMap<Point, Integer> spaceEgen = new HashMap<>();
+
 		HashMap<Point, Integer> incSpaceAfter = new HashMap<>();
 		HashMap<Point, Integer> alternativeKeys = new HashMap<>();
 

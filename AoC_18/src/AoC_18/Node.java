@@ -48,7 +48,7 @@ public class Node {
 			ret += neighbours.get(i).getIdOfEndNode();
 
 			if (!silent) {
-				System.out.println("ID of Edge: " + neighbours.get(i).getId() + " dist" + neighbours.get(i).getWeight()
+				System.out.println("ID of Edge: " + neighbours.get(i).getId() + " dist: " + neighbours.get(i).getWeight()
 						+ "\nID of the first node: " + neighbours.get(i).getIdOfStartNode()
 						+ "\nID of the second node: " + neighbours.get(i).getIdOfEndNode());
 				System.out.println();
