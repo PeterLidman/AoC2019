@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeSet;
 
 public class AoC_18 {
 	static HashMap<Point, Integer> _space = new HashMap<>();
@@ -126,7 +125,7 @@ public class AoC_18 {
 	}
 
 	private static Set<String> getSetFromString(String inStr) {
-		Set<String> ret = new TreeSet<>();
+		Set<String> ret = new HashSet<>();
 		for (int i = 0; i < inStr.length(); i++) {
 			ret.add(inStr.substring(i, i + 1));
 		}
