@@ -4,16 +4,15 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.util.Pair;
-
 public class AoC_14 {
 	static HashMap<String, Long> _quantities = new HashMap<>();
-	static HashMap<String, List<Pair<String, Long>>> _reactions = new HashMap<>();
+	static HashMap<String, List<Map.Entry<String, Long>>> _reactions = new HashMap<>();
 	static HashMap<String, Long> _bonus = new HashMap<>();
 	static Long _oreForOneFuel;
 
@@ -73,7 +72,7 @@ public class AoC_14 {
 				mul = 1L;
 			}
 			_quantities.put(consume, _quantities.get(consume) - _bonus.get(consume) * mul);
-			for (Pair<String, Long> p : _reactions.get(consume)) {
+			for (Map.Entry<String, Long> p : _reactions.get(consume)) {
 				tmpQuantities.put(p.getKey(), p.getValue() * mul);
 			}
 			// merge HashMaps
@@ -99,8 +98,8 @@ public class AoC_14 {
 
 	private static void readInput(int day, int suffix) {
 		String str, splitStr[], splitStr2[];
-		List<Pair<String, Long>> ret = new ArrayList<>();
-		Pair<String, Long> tmp;
+		List<Map.Entry<String, Long>> ret = new ArrayList<>();
+		Map.Entry<String, Long> tmp;
 		FileInputStream in;
 		try {
 			in = new FileInputStream(
@@ -123,10 +122,11 @@ public class AoC_14 {
 		}
 	}
 
-	private static Pair<String, Long> makePair(String a) {
+	private static Map.Entry<String, Long> makePair(String a) {
 		String s[];
 		s = a.split(" ");
-		return new Pair<String, Long>(s[1], Long.valueOf(s[0]));
+
+		return new AbstractMap.SimpleEntry<String, Long>(s[1], Long.valueOf(s[0]));
 	}
 
 }
